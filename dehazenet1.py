@@ -24,7 +24,7 @@ class resblock(nn.Module):
 
 
 
-class encoderNet(nn.Module):
+class GeneratorNet(nn.Module):
     def __init__(self,input_channel=3,output_channel=3):
         super(encoderNet,self).__init__()
         self.refpad=nn.ReflectionPad2d(3)
