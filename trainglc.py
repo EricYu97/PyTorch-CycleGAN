@@ -10,19 +10,22 @@ from torch.utils.data import DataLoader
 from datasets import ImageDataset
 import torchvision.transforms as transforms
 from PIL import Image
+import torchsnooper
 epochs=500
 dataroot="./dataset/RICE/"
 lr=0.0002
 input_channel=3
 output_channel=3
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda")
 size=(128,128)
 local_size=(32,32)
-batchSize=4
+batchSize=2
 decay_epoch=100
 
 blur_rgb=Blur(3)
+blur_rgb.to(device)
 cl=ColorLoss()
+cl.to(device)
 
 netGAtoB=GeneratorNet(input_channel,output_channel)
 netGBtoA=GeneratorNet(input_channel,output_channel)
@@ -50,7 +53,7 @@ vgg_model = vgg16(pretrained=True).features[:16]
 vgg_model = vgg_model.to(device)
 for param in vgg_model.parameters():
     param.requires_grad = False
-criterionPer=LossNetwork(vgg16)
+criterionPer=LossNetwork(vgg_model)
 criterion_identity = torch.nn.L1Loss()
 
 optimizer_G = torch.optim.Adam(itertools.chain(netGAtoB.parameters(), netGBtoA.parameters()),
@@ -68,8 +71,12 @@ lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(optimizer_D_B, lr_lambda=La
 Tensor = torch.cuda.FloatTensor
 input_A = Tensor(batchSize,input_channel,size[0],size[1])
 input_B = Tensor(batchSize,output_channel,size[0],size[1])
-target_real = Variable(Tensor(batchSize).fill_(1.0), requires_grad=False)
-target_fake = Variable(Tensor(batchSize).fill_(0.0), requires_grad=False)
+# template_tensor_global=torch.rand(batchSize,input_channel,size[0],size[1])
+# template_tensor_global.to(device)
+# templateout_global=netD_A(template_tensor_global)
+# shape=templateout_global.shape
+target_real = Variable(Tensor(batchSize,1,7,7).fill_(1.0), requires_grad=False)
+target_fake = Variable(Tensor(batchSize,1,7,7).fill_(0.0), requires_grad=False)
 fake_A_buffer = ReplayBuffer()
 fake_B_buffer = ReplayBuffer()
 
@@ -100,8 +107,6 @@ if __name__ == '__main__':
             # GAN loss
             fake_B = netGAtoB(real_A)
             pred_fake = netD_B(fake_B)
-            print(pred_fake.shape)
-            print(target_real.shape)
             loss_GAN_A2B = criterionGAN(pred_fake, target_real)
 
             fake_A = netGBtoA(real_B)
@@ -167,7 +172,7 @@ if __name__ == '__main__':
 
             """Local"""
             """将一张输出裁切为多张局部输出计算loss"""
-            print(f'loss_G={loss_G},loss_D_A={loss_D_A},loss_D_B={loss_D_B}')
+            print(f'loss_G={loss_G:.1f},loss_per={loss_per_ABA},loss_iden_A={loss_identity_A:.4f},loss_iden_B={loss_identity_B:.4f},loss_color:{loss_color_ABA:.4f},loss_D_A={loss_D_A:.4f},loss_D_B={loss_D_B:.4f}')
         lr_scheduler_G.step()
         lr_scheduler_D_A.step()
         lr_scheduler_D_B.step()
