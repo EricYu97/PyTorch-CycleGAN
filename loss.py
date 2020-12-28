@@ -89,10 +89,10 @@ if __name__ == '__main__':
     blur_gray2 = blur_gray(img_gray2)
     print(cl(blur_gray1, blur_gray2))
 
-    vgg_model = vgg16(pretrained=True).features[:50]
+    vgg_model = vgg16(pretrained=False).features[:50]
     # vgg_model = vgg_model.to(device)
     for param in vgg_model.parameters():
         param.requires_grad = False
-    criterionPer = LossNetwork(vgg16)
+    criterionPer = LossNetwork(vgg_model)
     out=criterionPer(img_rgb1,img_rgb2)
-    # print(criterionPer(img_rgb1,img_rgb2))
+    print(criterionPer(img_rgb1,img_rgb2))

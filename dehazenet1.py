@@ -26,7 +26,7 @@ class resblock(nn.Module):
 
 class GeneratorNet(nn.Module):
     def __init__(self,input_channel=3,output_channel=3):
-        super(encoderNet,self).__init__()
+        super(GeneratorNet,self).__init__()
         self.refpad=nn.ReflectionPad2d(3)
         self.conv1=nn.Conv2d(input_channel,64,7)
         self.insnorm64=nn.InstanceNorm2d(64)
@@ -120,7 +120,7 @@ class Discriminator_global(nn.Module):
 
 class Discriminator_local(nn.Module):
     def __init__(self,input_channel=3):
-        super(Discriminator_global,self).__init__()
+        super(Discriminator_local,self).__init__()
         self.conv1=nn.Conv2d(input_channel,64,4,stride=2,padding=1)
         self.conv2=nn.Conv2d(64,128,4,stride=2,padding=1)
         self.conv3=nn.Conv2d(128,256,4,stride=2,padding=1)
